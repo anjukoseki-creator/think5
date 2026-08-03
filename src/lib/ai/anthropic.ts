@@ -8,7 +8,7 @@ import { MockEvaluator } from "./mock";
 // on any error so the app never hard-fails during training.
 export class AnthropicEvaluator implements Evaluator {
   readonly name = "anthropic";
-  private model = process.env.ANTHROPIC_MODEL || "claude-opus-4-8";
+  private model = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5";
   private key = process.env.ANTHROPIC_API_KEY || "";
 
   async evaluate(problem: Problem, answer: LogicAnswer): Promise<Evaluation> {
