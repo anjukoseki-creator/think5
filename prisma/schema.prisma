@@ -1,0 +1,110 @@
+// THINK5 - Personal Growth OS
+// Phase 1 MVP schema (SQLite). Designed so Layer 2 (Structured Memory) and
+// Layer 3 (User Profile) can be extended, and the store can later be swapped
+// to PostgreSQL + pgvector without changing the app model shape.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  rawData  RawData[]
+  attempts LogicAttempt[]
+  scores   SkillScore[]
+  profile  UserProfile?
+  logs     AiAccessLog[]
+}
+
+// --- Layer 1: Raw Data ---------------------------------------------------
+// Stores user input as-is. aiAccessLevel controls whether the AI may read it.
+model RawData {
+  id            String   @id @default(cuid())
+  userId        String
+  content       String
+  category      String // LOGIC | EXPRESS | DECIDE | WHY | BUILD | FEEDBACK | NOTE | REFLECTION | RESULT | SCORE
+  aiAccessLevel String   @default("MEMORY") // PRIVATE | MEMORY | CONTEXT
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, category])
+}
+
+// A single LOGIC training attempt: the structured 9-step answer + evaluation.
+model LogicAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  problemId   String
+  problemText String
+  category    String
+  answerJson  String // the structured answer (9 fields) as JSON
+  subScores   String // JSON: { subskillKey: number(0-100) }
+  totalScore  Int
+  feedback    String // JSON structured feedback (8 required elements)
+  aiProvider  String   @default("mock")
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// Per-ability score snapshots for the growth graph.
+model SkillScore {
+  id        String   @id @default(cuid())
+  userId    String
+  ability   String // LOGIC | EXPRESS | DECIDE | BUILD | WHY
+  score     Int
+  sourceId  String? // e.g. LogicAttempt id
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, ability, createdAt])
+}
+
+// --- Layer 3: User Profile ----------------------------------------------
+// Editable by the user. In Phase 1 it is free-text; later the AI proposes
+// content that the user can approve / correct / reject.
+model UserProfile {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  coreValues           String   @default("")
+  strengths            String   @default("")
+  weaknesses           String   @default("")
+  currentGoals         String   @default("")
+  currentFocus         String   @default("")
+  decisionPatterns     String   @default("")
+  learningPatterns     String   @default("")
+  behavioralTendencies String   @default("")
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// --- Transparency: AI Access Log ----------------------------------------
+model AiAccessLog {
+  id            String   @id @default(cuid())
+  userId        String
+  requestType   String
+  usedDataIds   String // JSON array
+  purpose       String
+  provider      String
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
