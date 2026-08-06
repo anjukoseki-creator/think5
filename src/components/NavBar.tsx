@@ -4,6 +4,7 @@ import { logoutAction } from "@/app/actions/auth";
 const LINKS = [
   { href: "/dashboard", label: "ダッシュボード" },
   { href: "/logic", label: "LOGIC" },
+  { href: "/history", label: "履歴" },
   { href: "/profile", label: "プロフィール" },
   { href: "/data", label: "データ管理" },
 ];

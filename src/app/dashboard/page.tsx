@@ -131,23 +131,39 @@ export default async function Dashboard() {
         {/* recent attempts */}
         {attempts.length > 0 && (
           <div className="panel" style={{ marginTop: 16 }}>
-            <h3>最近のトレーニング</h3>
+            <div className="row spread">
+              <h3 style={{ margin: 0 }}>最近のトレーニング</h3>
+              <Link href="/history" className="small" style={{ color: "var(--accent)" }}>
+                すべての履歴を見る →
+              </Link>
+            </div>
             {[...attempts]
               .reverse()
               .slice(0, 5)
               .map((a) => (
-                <div className="row spread" key={a.id} style={{ padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                  <div className="small" style={{ maxWidth: "70%" }}>
-                    {a.problemText.slice(0, 60)}
-                    {a.problemText.length > 60 ? "…" : ""}
+                <Link
+                  href={`/history/${a.id}`}
+                  className="row spread history-row"
+                  key={a.id}
+                  style={{
+                    padding: "10px 6px",
+                    borderBottom: "1px solid var(--border)",
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
+                >
+                  <div className="small" style={{ maxWidth: "68%" }}>
+                    {a.problemText.slice(0, 56)}
+                    {a.problemText.length > 56 ? "…" : ""}
                   </div>
                   <div className="row" style={{ gap: 10 }}>
                     <span className="muted small">
                       {a.createdAt.toLocaleDateString("ja-JP")}
                     </span>
                     <span className="tag">{a.totalScore}点</span>
+                    <span className="muted">›</span>
                   </div>
-                </div>
+                </Link>
               ))}
           </div>
         )}
